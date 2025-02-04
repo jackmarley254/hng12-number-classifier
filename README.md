@@ -114,3 +114,4 @@ I'm a passionate Backend Software Engineer currently honing my skills and buildi
 💎 **Email:** [jackndiritu97@gmail.com](mailto:jackndiritu97@gmail.com)\
 🔗 **GitHub:** [jackmarley254](https://github.com/jackmarley254)\
 🔗 **LinkedIn:** [Jackson Gitahi](https://linkedin.com/in/jackson-gitahi)
+💎 **X:** [Jackson Ndiritu](https://x.com/ndiritu_jack)
