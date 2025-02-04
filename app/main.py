@@ -58,5 +58,5 @@ def classify_number(number:int = Query(..., description="The number to classify"
         return {"number": number, "error": True, "message": str(e)}
     
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Default to 8000 if PORT not set
-    uvicorn.run(app, host="0.0.0.0", port=port)   
+   port = int(os.getenv("PORT", 8000))  # Default to 8000 if PORT not set
+   uvicorn.run(app, host="0.0.0.0", port=port)   
