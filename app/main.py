@@ -1,70 +1,26 @@
-from fastapi import FastAPI, Query, HTTPException
-import requests
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-def is_armstrong(number: int) -> bool:
-    """Check if a number is an Armstrong number."""
-    if number < 0:
-        return False
-    digits = [int(digit) for digit in str(number)]
-    return sum(digit ** len(digits) for digit in digits) == number
-
-def is_prime(n: int) -> bool:
-    """Check if a number is prime."""
-    if n < 2:
-        return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-def is_perfect(n: int) -> bool:
-    """Check if a number is a perfect number."""
-    if n <= 0:
-        return False
-    return sum(i for i in range(1, n) if n % i == 0) == n
-
-def get_fun_fact(number: int) -> str:
-    """Fetch a fun fact from the Numbers API."""
-    try:
-        response = requests.get(f"http://numbersapi.com/{number}/math", timeout=5)
-        return response.text if response.status_code == 200 else "No fun fact available"
-    except requests.RequestException:
-        return "No fun fact available"
-
 @app.get("/api/classify-number")
-def classify_number(number: str = Query(..., description="Number to classify")):
-    """Classify a given number with its mathematical properties."""
+async def classify_number(number: str):
+    # Validate if number is an integer
+    if not number.lstrip('-').isdigit():
+        return JSONResponse(
+            status_code=400,
+            content={"number": number, "error": True}
+        )
     
-    # Validate integer input (reject floats, strings, etc.)
-    if number.lstrip("-").isdigit() == False or "." in number:
-        raise HTTPException(status_code=400, detail={"number": number, "error": True})
+    # Convert to integer
+    num = int(number)
 
-    number = int(number)  # Convert valid input to integer
-
-    # Classify number properties
-    properties = []
-    if is_armstrong(number):
-        properties.append("armstrong")
-    properties.append("odd" if number % 2 else "even")
-
-    response = {
-        "number": number,
-        "is_prime": is_prime(number) if number > 0 else False,
-        "is_perfect": is_perfect(number) if number > 0 else False,
-        "properties": properties,
-        "digit_sum": sum(map(int, str(abs(number)))) * (-1 if number < 0 else 1),
-        "fun_fact": get_fun_fact(number)
+    # Classification logic here...
+    return {
+        "number": num,
+        "is_prime": False,  # Example
+        "is_perfect": False,  # Example
+        "properties": ["odd"],  # Example
+        "digit_sum": sum(int(digit) for digit in str(abs(num))),  # Handle negatives
+        "fun_fact": "This is a fun fact"  # Placeholder
     }
-
-    return response
