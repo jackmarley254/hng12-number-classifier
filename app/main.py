@@ -62,18 +62,10 @@ async def classify_number(number: str):
     # Define properties (order matters)
     properties = []
     
-    if num >= 0 and is_armstrong(num):
+    if is_armstrong(num):
         properties.append("armstrong")
-    
-    # Determine if the number is odd or even
-    if num % 2 != 0:
-        properties.append("odd")
-    else:
-        properties.append("even")
-
-#    if is_armstrong(num):
-#        properties.append("armstrong")
-#    properties.append("odd" if num % 2 != 0 else "even")
+        
+    properties.append("odd" if num % 2 != 0 else "even")
 
     # Construct response
     response_data = {
