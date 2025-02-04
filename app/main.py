@@ -1,9 +1,7 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Query, HTTPException
 import requests
-from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS
+app = FastAPI()
 
 # Helper Functions
 def is_prime(n):
@@ -36,36 +34,31 @@ def get_fun_fact(n):
         return None
 
 # API Endpoint
-@app.route('/api/classify-number', methods=['GET'])
-def classify_number():
-    number_param = request.args.get('number')
-    
+@app.get("/api/classify-number")
+async def classify_number(number: str = Query(...)):
     # Validate input
-    if not number_param:
-        return jsonify({"number": None, "error": True}), 400
+    if not number:
+        raise HTTPException(status_code=400, detail={"number": None, "error": True})
     
     try:
         # Reject floats and non-integers
-        if '.' in number_param:
-            return jsonify({"number": number_param, "error": True}), 400
-        number = int(number_param)
+        if '.' in number:
+            raise HTTPException(status_code=400, detail={"number": number, "error": True})
+        number_int = int(number)
     except ValueError:
-        return jsonify({"number": number_param, "error": True}), 400
+        raise HTTPException(status_code=400, detail={"number": number, "error": True})
 
     # Classify properties
     properties = []
-    if is_armstrong(number):
+    if is_armstrong(number_int):
         properties.append("armstrong")
-    properties.append("even" if number % 2 == 0 else "odd")
+    properties.append("even" if number_int % 2 == 0 else "odd")
 
-    return jsonify({
-        "number": number,
-        "is_prime": is_prime(number),
-        "is_perfect": is_perfect(number),
+    return {
+        "number": number_int,
+        "is_prime": is_prime(number_int),
+        "is_perfect": is_perfect(number_int),
         "properties": properties,
-        "digit_sum": get_digit_sum(number),
-        "fun_fact": get_fun_fact(number)
-    }), 200
-
-if __name__ == '__main__':
-    app.run(debug=False)
+        "digit_sum": get_digit_sum(number_int),
+        "fun_fact": get_fun_fact(number_int)
+    }
