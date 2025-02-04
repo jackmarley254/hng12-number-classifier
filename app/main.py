@@ -1,69 +1,71 @@
-import os
-import uvicorn
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from flask import Flask, request, jsonify
 import requests
-from datetime import datetime
+from flask_cors import CORS
 
-app = FastAPI()
+app = Flask(__name__)
+CORS(app)  # Enable CORS
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all domains
-    allow_credentials=True,
-    allow_methods=["GET"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
-
-def is_prime(n: int) -> bool:
-    if n <2:
+# Helper Functions
+def is_prime(n):
+    if n < 2:
         return False
-    for i in range(2, int(n ** 0.5) + 1):
+    for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
             return False
     return True
 
-def is_perfect(n: int) -> bool:
-    return sum(i for i in range(1, n) if n % 1 == 0) == n
+def is_perfect(n):
+    if n < 2:
+        return False
+    divisors = [i for i in range(1, n) if n % i == 0]
+    return sum(divisors) == n
 
-def is_armstrong(number: int) -> bool:
-    digits = [int(digit) for digit in str(number)]
-    power = len(digits)
-    return sum(digit ** len(digits) for digit in digits) == number
+def is_armstrong(n):
+    digits = list(str(n))
+    length = len(digits)
+    return sum(int(d)**length for d in digits) == n
 
-def get_fun_fact(number):
-    """Fetch a fun fact from Numbers API"""
+def get_digit_sum(n):
+    return sum(int(d) for d in str(n))
+
+def get_fun_fact(n):
     try:
-        
-        response =requests.get(f"http://numbersapi.com/{number}/math?json", timeout=5)
-        return response.text if response.status_code == 200 else "No fun fact available"
-    except requests.RequestException:
-        return "No fun fact available"
+        response = requests.get(f"http://numbersapi.com/{n}/math")
+        return response.text if response.status_code == 200 else None
+    except:
+        return None
 
-@app.get("/api/classify-number")
-def classify_number(number: str = Query(..., description="The number to classify")):
-    if not number.lstrip("-").isdigit(): # Ensure it's an integer
-       raise HTTPException(status_code=400, detail={"number": number, "error": True})
-   
-    number = int(number)
+# API Endpoint
+@app.route('/api/classify-number', methods=['GET'])
+def classify_number():
+    number_param = request.args.get('number')
+    
+    # Validate input
+    if not number_param:
+        return jsonify({"number": None, "error": True}), 400
+    
+    try:
+        # Reject floats and non-integers
+        if '.' in number_param:
+            return jsonify({"number": number_param, "error": True}), 400
+        number = int(number_param)
+    except ValueError:
+        return jsonify({"number": number_param, "error": True}), 400
 
-
+    # Classify properties
     properties = []
     if is_armstrong(number):
         properties.append("armstrong")
-    properties.append("odd" if number % 2 else "even")
-            
-    response = {
-            "number": number,
-            "is_prime": is_perfect(number),
-            "is_perfect": is_perfect(number),
-            "properties": properties,
-            "digit_sum": sum(map(int, str(abs(number)))),
-            "fun_fact": get_fun_fact(number)
-        }
-    return response
-    
-if __name__ == "__main__":
-   port = int(os.getenv("PORT", 8000))  # Default to 8000 if PORT not set
-   uvicorn.run(app, host="0.0.0.0", port=port)   
+    properties.append("even" if number % 2 == 0 else "odd")
+
+    return jsonify({
+        "number": number,
+        "is_prime": is_prime(number),
+        "is_perfect": is_perfect(number),
+        "properties": properties,
+        "digit_sum": get_digit_sum(number),
+        "fun_fact": get_fun_fact(number)
+    }), 200
+
+if __name__ == '__main__':
+    app.run(debug=False)
