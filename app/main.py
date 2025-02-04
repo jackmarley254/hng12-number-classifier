@@ -1,8 +1,20 @@
+import os
+import uvicorn
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 from datetime import datetime
 
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all domains
+    allow_credentials=True,
+    allow_methods=["GET"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 def is_prime(n):
     if n <2:
@@ -44,3 +56,7 @@ def classify_number(number:int = Query(..., description="The number to classify"
         return result
     except Exception as e:
         return {"number": number, "error": True, "message": str(e)}
+    
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Default to 8000 if PORT not set
+    uvicorn.run(app, host="0.0.0.0", port=port)   
