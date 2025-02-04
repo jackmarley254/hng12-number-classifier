@@ -1,64 +1,68 @@
-from fastapi import FastAPI, Query, HTTPException
+from flask import Flask, request, jsonify  
 import requests
+from flask_cors import CORS  
+ 
 
-app = FastAPI()
+app = Flask(__name__)
+CORS(app)
 
-# Helper Functions
-def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
+@app.route('/api/classify-number', methods=['GET'])  
+def classify_number():  
+    number = request.args.get('number')  
+    try:  
+        number = int(number)  
+    except (ValueError, TypeError):  
+        return jsonify({"number": number, "error": True}), 400  
 
-def is_perfect(n):
-    if n < 2:
-        return False
-    divisors = [i for i in range(1, n) if n % i == 0]
-    return sum(divisors) == n
+    is_prime = is_prime_number(number)  
+    is_perfect = is_perfect_number(number)  
+    properties = classify_properties(number)  
+    digit_sum = sum_of_digits(number)  
+    fun_fact = get_fun_fact(number)  
 
-def is_armstrong(n):
-    digits = list(str(n))
-    length = len(digits)
-    return sum(int(d)**length for d in digits) == n
+    return jsonify({  
+        "number": number,  
+        "is_prime": is_prime,  
+        "is_perfect": is_perfect,  
+        "properties": properties,  
+        "digit_sum": digit_sum,  
+        "fun_fact": fun_fact  
+    })  
 
-def get_digit_sum(n):
-    return sum(int(d) for d in str(n))
+def is_prime_number(n):  
+    if n < 2:  
+        return False  
+    for i in range(2, int(n**0.5) + 1):  
+        if n % i == 0:  
+            return False  
+    return True  
 
-def get_fun_fact(n):
-    try:
-        response = requests.get(f"http://numbersapi.com/{n}/math")
-        return response.text if response.status_code == 200 else None
-    except:
-        return None
+def is_perfect_number(n):  
+    if n < 2:  
+        return False  
+    sum_divisors = sum(i for i in range(1, n) if n % i == 0)  
+    return sum_divisors == n  
 
-# API Endpoint
-@app.get("/api/classify-number")
-async def classify_number(number: str = Query(...)):
-    # Validate input
-    if not number:
-        raise HTTPException(status_code=400, detail={"number": None, "error": True})
-    
-    try:
-        # Reject floats and non-integers
-        if '.' in number:
-            raise HTTPException(status_code=400, detail={"number": number, "error": True})
-        number_int = int(number)
-    except ValueError:
-        raise HTTPException(status_code=400, detail={"number": number, "error": True})
+def classify_properties(n):  
+    properties = []  
+    if is_armstrong_number(n):  
+        properties.append("armstrong")  
+    properties.append("odd" if n % 2 != 0 else "even")  
+    return properties  
 
-    # Classify properties
-    properties = []
-    if is_armstrong(number_int):
-        properties.append("armstrong")
-    properties.append("even" if number_int % 2 == 0 else "odd")
+def is_armstrong_number(n):  
+    digits = [int(d) for d in str(n)]  
+    num_digits = len(digits)  
+    armstrong_sum = sum(d ** num_digits for d in digits)  
+    return armstrong_sum == n  
 
-    return {
-        "number": number_int,
-        "is_prime": is_prime(number_int),
-        "is_perfect": is_perfect(number_int),
-        "properties": properties,
-        "digit_sum": get_digit_sum(number_int),
-        "fun_fact": get_fun_fact(number_int)
-    }
+def sum_of_digits(n):  
+    return sum(int(d) for d in str(n))  
+
+def get_fun_fact(n):  
+    url = f"http://numbersapi.com/{n}/math"  
+    response = requests.get(url)  
+    return response.text  
+
+if __name__ == '_main_':  
+    app.run(debug=True)
