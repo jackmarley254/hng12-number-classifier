@@ -21,10 +21,17 @@ This project was built as part of **HNG12 Stage 1 Backend Task**.
 
 ## **🚀 API Endpoint**
 ### **Base URL:**  https://hng12-number-classifier.onrender.com
+
 - **Method:** `GET`
 - **Response Format:** `JSON`
 
-### Example Response
+### ✅ Correct Inputs
+
+```
+GET /api/classify-number?number=371
+```
+
+### Response (200 Ok)
 
 ```json
 {
@@ -37,11 +44,31 @@ This project was built as part of **HNG12 Stage 1 Backend Task**.
 }
 ```
 
-###  Error Reponse
+### ❌ Invalid Input - Alphabetic String
+
+```
+GET /api/classify-number?number=abc
+```
+
+###  Reponse (400 Bad Request)
 
 ```json
 {
     "number": "alphabet",
+    "error": true
+}
+```
+
+### ❌ Invalid Input - Floating Point
+
+```
+GET /api/classify-number?number=3.14
+```
+### Response (400 Bad Request)
+
+```json
+{
+    "number": "3.14",
     "error": true
 }
 ```
